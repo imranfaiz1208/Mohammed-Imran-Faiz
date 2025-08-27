@@ -1,0 +1,6 @@
+<div class="product-card">
+  <img src="{{ product.featured_image | img_url: 'medium' }}" alt="{{ product.title }}" class="product-card__image" />
+  <h3 class="product-card__title">{{ product.title }}</h3>
+  <p class="product-card__price">{{ product.price | money }}</p>
+  <button class="product-card__button" data-product-id="{{ product.id }}" onclick="openProductModal({{ product.id }})">View Details</button>
+</div>

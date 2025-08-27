@@ -1,0 +1,38 @@
+{
+  "name": "Theme Settings",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Banner Section Settings"
+    },
+    {
+      "type": "text",
+      "id": "banner_heading",
+      "label": "Banner Heading",
+      "default": "Welcome to Our Store"
+    },
+    {
+      "type": "textarea",
+      "id": "banner_subtext",
+      "label": "Banner Subtext",
+      "default": "Discover our latest products and offers."
+    },
+    {
+      "type": "text",
+      "id": "banner_button_text",
+      "label": "Button Text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "header",
+      "content": "Product Grid Section Settings"
+    },
+    {
+      "type": "product_list",
+      "id": "product_grid",
+      "label": "Select Products for Grid",
+      "default": [],
+      "info": "Select up to 6 products to display in the product grid."
+    }
+  ]
+}

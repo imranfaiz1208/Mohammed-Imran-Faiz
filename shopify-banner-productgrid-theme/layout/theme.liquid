@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {{ content_for_header }}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.theme_title }}</title>
+    <link rel="stylesheet" href="{{ 'banner-section.css' | asset_url }}">
+    <link rel="stylesheet" href="{{ 'product-grid-section.css' | asset_url }}">
+    <script src="{{ 'theme.js' | asset_url }}" defer></script>
+    <script src="{{ 'product-modal.js' | asset_url }}" defer></script>
+  </head>
+  <body>
+    {{ content_for_layout }}
+    <header>
+        <!-- Header content goes here -->
+    </header>
+
+    <main>
+        {% section 'banner-section' %}
+        {% section 'product-grid-section' %}
+    </main>
+
+    <footer>
+        <!-- Footer content goes here -->
+    </footer>
+
+    <div id="product-popup" class="popup hidden">
+      <div class="popup-content">
+        <span class="close-btn" style="cursor:pointer;font-size:2em;float:right;">&times;</span>
+        <h2 id="popup-title"></h2>
+        <p id="popup-price"></p>
+        <p id="popup-description"></p>
+        <select id="variant-select"></select>
+        <button id="add-to-cart-btn">Add to Cart</button>
+      </div>
+    </div>
+    <style>
+      .popup {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .popup.hidden { display: none; }
+      .popup-content {
+        background: #fff;
+        padding: 32px 24px;
+        border-radius: 8px;
+        max-width: 400px;
+        width: 90vw;
+        box-sizing: border-box;
+        position: relative;
+      }
+      @media (max-width: 600px) {
+        .popup-content {
+          padding: 18px 8px;
+          max-width: 98vw;
+        }
+      }
+    </style>
+  </body>
+</html>
