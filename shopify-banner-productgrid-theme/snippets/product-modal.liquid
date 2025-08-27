@@ -1,0 +1,32 @@
+<div class="product-modal" id="product-modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeModal()">&times;</span>
+    <div class="modal-product-image">
+      <img src="" alt="Product Image" id="modal-product-image">
+    </div>
+    <div class="modal-product-details">
+      <h2 id="modal-product-title"></h2>
+      <p id="modal-product-description"></p>
+      <span id="modal-product-price"></span>
+      <button class="add-to-cart-button" onclick="addToCart()">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openModal(product) {
+    document.getElementById('modal-product-image').src = product.image;
+    document.getElementById('modal-product-title').innerText = product.title;
+    document.getElementById('modal-product-description').innerText = product.description;
+    document.getElementById('modal-product-price').innerText = product.price;
+    document.getElementById('product-modal').style.display = 'block';
+  }
+
+  function closeModal() {
+    document.getElementById('product-modal').style.display = 'none';
+  }
+
+  function addToCart() {
+    // Add to cart functionality
+  }
+</script>

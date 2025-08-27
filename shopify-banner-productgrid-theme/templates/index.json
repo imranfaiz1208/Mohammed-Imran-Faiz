@@ -1,0 +1,30 @@
+{
+  "name": "Home",
+  "sections": {
+    "banner": {
+      "type": "banner-section",
+      "settings": {
+        "heading": "Welcome to Our Store",
+        "subtext": "Discover our exclusive collection",
+        "button_text": "Shop Now"
+      }
+    },
+    "product_grid": {
+      "type": "product-grid-section",
+      "settings": {
+        "products": [
+          "product-1",
+          "product-2",
+          "product-3",
+          "product-4",
+          "product-5",
+          "product-6"
+        ]
+      }
+    }
+  },
+  "order": [
+    "banner",
+    "product_grid"
+  ]
+}

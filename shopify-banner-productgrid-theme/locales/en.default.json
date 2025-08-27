@@ -1,0 +1,16 @@
+{
+  "banner": {
+    "heading": "Welcome to Our Store",
+    "subtext": "Discover our exclusive collection of products.",
+    "button_text": "Shop Now"
+  },
+  "product_grid": {
+    "title": "Featured Products",
+    "no_products": "No products available."
+  },
+  "modal": {
+    "add_to_cart": "Add to Cart",
+    "view_details": "View Details",
+    "close": "Close"
+  }
+}

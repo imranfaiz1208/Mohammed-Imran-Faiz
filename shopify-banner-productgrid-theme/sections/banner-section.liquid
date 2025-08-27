@@ -1,0 +1,51 @@
+<section class="custom-banner">
+  <div class="banner-content">
+    <h1>{{ section.settings.heading }}</h1>
+    <p>{{ section.settings.subtext }}</p>
+    <button class="animated-btn">{{ section.settings.button_text }}</button>
+  </div>
+</section>
+
+<style>
+  .custom-banner {
+    text-align: center;
+    padding: 50px 20px;
+    background: #f5f5f5;
+  }
+  .animated-btn {
+    padding: 10px 24px;
+    background: #ff4d4d;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s;
+    font-size: 1.1em;
+    border-radius: 4px;
+  }
+  .animated-btn:hover {
+    transform: scale(1.1);
+  }
+  @media (max-width: 600px) {
+    .custom-banner {
+      padding: 30px 8px;
+    }
+    .animated-btn {
+      width: 100%;
+      font-size: 1em;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Banner Section",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading Text", "default": "Welcome to Our Store" },
+    { "type": "text", "id": "subtext", "label": "Subtext", "default": "Explore our latest products" },
+    { "type": "text", "id": "button_text", "label": "Button Text", "default": "Shop Now" }
+  ],
+  "presets": [
+    { "name": "Banner Section" }
+  ]
+}
+{% endschema %}

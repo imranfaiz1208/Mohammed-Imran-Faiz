@@ -1,0 +1,109 @@
+<section class="product-grid-section">
+  <div class="product-grid">
+    {% for i in (1..6) %}
+      {% assign product = all_products[section.settings["product_" | append: i]] %}
+      {% if product %}
+        <div class="product-card" data-handle="{{ product.handle }}">
+          <img 
+            src="{{ product.featured_image | image_url: width: 300, height: 300, crop: 'center' }}" 
+            alt="{{ product.title }}"
+            width="300"
+            height="300"
+          >
+          <h3>{{ product.title }}</h3>
+          <p>{{ product.price | money }}</p>
+          <button class="popup-trigger" data-handle="{{ product.handle }}">View</button>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <script>
+    window.productData = {
+      {% for i in (1..6) %}
+        {% assign p = all_products[section.settings["product_" | append: i]] %}
+        {% if p %}
+        "{{ p.handle }}": {
+          "title": {{ p.title | json }},
+          "price": {{ p.price | money | json }},
+          "description": {{ p.description | escape | json }},
+          "variants": [
+            {% for v in p.variants %}
+              {
+                "id": {{ v.id }},
+                "title": {{ v.title | json }},
+                "price": {{ v.price | money | json }},
+                "option1": {{ v.option1 | json }},
+                "option2": {{ v.option2 | json }}
+              }{% unless forloop.last %},{% endunless %}
+            {% endfor %}
+          ]
+        }{% unless forloop.last %},{% endunless %}
+        {% endif %}
+      {% endfor %}
+    };
+  </script>
+</section>
+
+<style>
+  .product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+  }
+  .product-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 18px;
+    width: 220px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .product-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+  .popup-trigger {
+    margin-top: 10px;
+    padding: 8px 18px;
+    background: #ff4d4d;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .popup-trigger:hover {
+    background: #e63c3c;
+  }
+  @media (max-width: 700px) {
+    .product-grid {
+      flex-direction: column;
+      gap: 16px;
+    }
+    .product-card {
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Product Grid Section",
+  "settings": [
+    { "type": "product", "id": "product_1", "label": "Product 1" },
+    { "type": "product", "id": "product_2", "label": "Product 2" },
+    { "type": "product", "id": "product_3", "label": "Product 3" },
+    { "type": "product", "id": "product_4", "label": "Product 4" },
+    { "type": "product", "id": "product_5", "label": "Product 5" },
+    { "type": "product", "id": "product_6", "label": "Product 6" }
+  ],
+  "presets": [
+    { "name": "Product Grid Section" }
+  ]
+}
+{% endschema %}
