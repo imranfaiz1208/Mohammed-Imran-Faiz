@@ -1,0 +1,17 @@
+{
+  "name": "Ecomexperts Test",
+  "sections": {
+    "banner": {
+      "type": "custom-banner",
+      "settings": {}
+    },
+    "grid": {
+      "type": "custom-grid",
+      "settings": {}
+    }
+  },
+  "order": [
+    "banner",
+    "grid"
+  ]
+}

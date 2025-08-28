@@ -1,0 +1,203 @@
+{% comment %}
+  This section is a full-width banner with an optional background image,
+  customizable text, and two call-to-action buttons.
+
+  - Uses theme color schemes for seamless integration.
+  - All text and links are editable in the Theme Customizer.
+  - Includes CSS for button animations and mobile responsiveness.
+{% endcomment %}
+
+<div class="color-{{ section.settings.color_scheme }} gradient">
+  <div class="custom-banner
+    {% if section.settings.image == blank %} custom-banner--no-image{% endif %}"
+  >
+    {%- if section.settings.image != blank -%}
+      <div class="custom-banner__media">
+        <img
+          srcset="{%- if section.settings.image.width >= 375 -%}{{ section.settings.image | image_url: width: 375 }} 375w,{%- endif -%}
+            {%- if section.settings.image.width >= 750 -%}{{ section.settings.image | image_url: width: 750 }} 750w,{%- endif -%}
+            {%- if section.settings.image.width >= 1100 -%}{{ section.settings.image | image_url: width: 1100 }} 1100w,{%- endif -%}
+            {%- if section.settings.image.width >= 1500 -%}{{ section.settings.image | image_url: width: 1500 }} 1500w,{%- endif -%}
+            {%- if section.settings.image.width >= 2200 -%}{{ section.settings.image | image_url: width: 2200 }} 2200w,{%- endif -%}
+            {%- if section.settings.image.width >= 3000 -%}{{ section.settings.image | image_url: width: 3000 }} 3000w,{%- endif -%}
+            {{ section.settings.image | image_url }} {{ section.settings.image.width }}w"
+          src="{{ section.settings.image | image_url: width: 1500 }}"
+          sizes="100vw"
+          alt="{{ section.settings.image.alt | escape }}"
+          loading="lazy"
+          width="{{ section.settings.image.width }}"
+          height="{{ section.settings.image.height }}"
+        >
+      </div>
+    {%- endif -%}
+    <div class="custom-banner__content page-width">
+      <h1 class="custom-banner__heading">{{ section.settings.heading | escape }}</h1>
+      <p class="custom-banner__subheading">{{ section.settings.subheading | escape }}</p>
+      <div class="custom-banner__buttons">
+        {%- if section.settings.button_1_text != blank -%}
+          <a href="{{ section.settings.button_1_link }}" class="button button--primary">{{ section.settings.button_1_text | escape }}</a>
+        {%- endif -%}
+        {%- if section.settings.button_2_text != blank -%}
+          <a href="{{ section.settings.button_2_link }}" class="button button--secondary">{{ section.settings.button_2_text | escape }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%- style -%}
+  .custom-banner {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 400px;
+    padding: 4rem 0;
+  }
+
+  .custom-banner__media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  .custom-banner__media::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3); /* Overlay for text readability */
+  }
+
+  .custom-banner__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .custom-banner__content {
+    position: relative;
+    z-index: 1;
+    color: rgb(var(--color-background)); /* Assumes dark image, light text */
+  }
+
+  .custom-banner--no-image .custom-banner__content {
+    color: rgb(var(--color-foreground));
+  }
+
+  .custom-banner__heading {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .custom-banner__subheading {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .custom-banner__buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  /* Button Animation */
+  .custom-banner__buttons .button {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .custom-banner__buttons .button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  @media screen and (max-width: 749px) {
+    .custom-banner__heading {
+      font-size: 2.5rem;
+    }
+    .custom-banner__buttons {
+      flex-direction: column;
+    }
+  }
+{%- endstyle -%}
+
+{% schema %}
+{
+  "name": "Custom Banner",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Background image"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        { "value": "scheme-1", "label": "Scheme 1" },
+        { "value": "scheme-2", "label": "Scheme 2" },
+        { "value": "scheme-3", "label": "Scheme 3" },
+        { "value": "scheme-4", "label": "Scheme 4" },
+        { "value": "scheme-5", "label": "Scheme 5" }
+      ],
+      "default": "scheme-1",
+      "label": "Color scheme"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Your Awesome Headline"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Tell your story in a few words."
+    },
+    {
+      "type": "header",
+      "content": "Buttons"
+    },
+    {
+      "type": "text",
+      "id": "button_1_text",
+      "label": "Button 1 text",
+      "default": "Shop All"
+    },
+    {
+      "type": "url",
+      "id": "button_1_link",
+      "label": "Button 1 link"
+    },
+    {
+      "type": "text",
+      "id": "button_2_text",
+      "label": "Button 2 text",
+      "default": "Learn More"
+    },
+    {
+      "type": "url",
+      "id": "button_2_link",
+      "label": "Button 2 link"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Banner"
+    }
+  ]
+}
+{% endschema %}
