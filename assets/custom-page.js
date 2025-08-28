@@ -26,6 +26,23 @@
  * @property {string[]} options
  * @property {string} featured_image
  */
+
+/**
+ * @typedef {object} ProductOption
+ * @property {string} name
+ * @property {string[]} values
+ */
+
+/**
+ * @typedef {object} ShopifyProduct
+ * @property {ShopifyProductVariant[]} variants
+ * @property {boolean} has_only_default_variant
+ * @property {ProductOption[]} options_with_values
+ * @property {string} title
+ * @property {string} description
+ * @property {number} price
+ * @property {{ alt: string|null }} featured_image
+ */
 class ProductGrid {
   constructor() {
     this.container = document.querySelector('.product-grid-section');
@@ -93,53 +110,38 @@ class ProductGrid {
   openPopup(handle) {
     const product = this.productData[handle];
     if (!product) return;
-    
+
     // Store the trigger element to return focus to it close
     this.activeTrigger = document.activeElement;
 
-    // Build the popup's inner HTML dynamically
-    // This is a simplified variant selector; a real-world scenario might need more complex logic for multiple option types.
-    let variantsHtml = '';
-    if (product.has_only_default_variant) {
-      variantsHtml = `<input type="hidden" name="id" value="${product.variants[0]?.id || ''}">`;
-    } else {
-      variantsHtml = `
-        <select name="id" class="product-variants no-js-hidden" aria-label="Select variant">
-          ${product.variants.map((/** @type {ShopifyProductVariant} */ variant) => `
-            <option value="${variant.id}" ${variant.available ? '' : 'disabled'}>
-              ${variant.title}${variant.available ? '' : ' - Sold Out'}
-            </option>
-          `).join('')}
-        </select>
-      `;
-    }
+    const variantSelectorHtml = this._buildVariantSelectors(product);
 
     const popupTitleId = `popup-title-${handle}`;
     const price = new Intl.NumberFormat(document.documentElement.lang, { style: 'currency', currency: this.currencyCode }).format(product.price / 100);
 
     const popupHtml = `
-      <div class="product-popup__grid">
-        <div class="product-popup__media">
-          <img src="${product.featured_image}" alt="${product.featured_image.alt || product.title}" />
-        </div>
-        <div class="product-popup__info">
-          <h2 id="${popupTitleId}">${product.title}</h2>
-          <p class="product-popup__price">${price}</p>
-          <div class="product-popup__description">${product.description}</div>
-          <form class="popup-form" data-product-handle="${handle}">
-            ${variantsHtml}
-            <button type="submit" class="button button--primary">
-              <span class="button__text">Add to Cart</span>
-              <div class="loading-overlay__spinner"></div>
-            </button>
-            <div class="popup-form__error" role="alert" aria-live="polite"></div>
-          </form>
-        </div>
+      <div class="product-popup__media">
+        <img src="${product.featured_image}" alt="${product.featured_image?.alt || product.title}" />
+      </div>
+      <div class="product-popup__content-wrapper">
+        <h2 id="${popupTitleId}" class="product-popup__title">${product.title}</h2>
+        <p class="product-popup__price">${price}</p>
+        <div class="product-popup__description">${product.description}</div>
+        <form class="popup-form" data-product-handle="${handle}">
+          <input type="hidden" name="id" value="${product.variants[0].id}">
+          ${variantSelectorHtml}
+          <button type="submit" class="button button--primary">
+            <span class="button__text">ADD TO CART</span>
+            <div class="loading-overlay__spinner"></div>
+          </button>
+          <div class="popup-form__error" role="alert" aria-live="polite"></div>
+        </form>
       </div>
     `;
 
     if (this.popupBody) this.popupBody.innerHTML = popupHtml;
     if (this.popup) this.popup.setAttribute('aria-labelledby', popupTitleId);
+    if (this.popup) this.popup.classList.add('is-visible');
     if (this.popup) this.popup.removeAttribute('aria-hidden');
     document.body.style.overflow = 'hidden';
     if (this.popup) this.popup.addEventListener('keydown', this.boundTrapFocusKeydown);
@@ -155,7 +157,10 @@ class ProductGrid {
 
     const variantSelector = this.popup?.querySelector('.product-variants');
     if (variantSelector) {
-      variantSelector.addEventListener('change', this.onVariantChange.bind(this));
+      const form = this.popup?.querySelector('.popup-form');
+      if (form) {
+        form.addEventListener('change', this._onVariantChange.bind(this));
+      }
       // Trigger change to set initial state for price and button
       variantSelector.dispatchEvent(new Event('change'));
     } else {
@@ -180,6 +185,7 @@ class ProductGrid {
    */
   closePopup() {
     this.popup?.setAttribute('aria-hidden', 'true');
+    this.popup?.classList.remove('is-visible');
     if (this.popup) this.popup.removeAttribute('aria-labelledby');
     if (this.popupBody) this.popupBody.innerHTML = ''; // Clear content to free up memory
     document.body.style.overflow = ''; // Restore scrolling
@@ -225,11 +231,10 @@ class ProductGrid {
    * Updates the price and Add to Cart button when a new variant is selected.
    * @param {Event} event The change event from the variant selector.
    */
-  onVariantChange(event) {
-    const variantSelector = event.currentTarget;
-    if (!(variantSelector instanceof HTMLSelectElement)) return;
+  _onVariantChange(event) {
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) return;
 
-    const form = variantSelector.closest('form');
     if (!form) return;
 
     const productHandle = form.dataset.productHandle;
@@ -238,8 +243,14 @@ class ProductGrid {
     const product = this.productData[productHandle];
     if (!product) return;
 
-    const selectedVariantId = parseInt(variantSelector.value, 10);
-    const selectedVariant = product.variants.find((/** @type {ShopifyProductVariant} */ v) => v.id === selectedVariantId);
+    const formData = new FormData(form);
+    const selectedOptions = Array.from(formData.values());
+
+    const selectedVariant = product.variants.find((/** @type {ShopifyProductVariant} */ variant) => {
+      return selectedOptions.every((optionValue, index) => {
+        return variant.options[index] === optionValue;
+      });
+    });
 
     if (!selectedVariant) return;
 
@@ -248,6 +259,48 @@ class ProductGrid {
 
     // Update button state
     this.updateButtonState(selectedVariant, form);
+
+    // Update the hidden variant ID input
+    const variantIdInput = form.querySelector('input[name="id"]');
+    if (variantIdInput instanceof HTMLInputElement) {
+      variantIdInput.value = selectedVariant.id.toString();
+    }
+  }
+
+  /**
+   * Builds HTML for variant selectors based on product options.
+   * @param {ShopifyProduct} product - The Shopify product object.
+   * @returns {string} The generated HTML for variant selectors.
+   */
+  _buildVariantSelectors(product) {
+    if (!product.options_with_values || product.has_only_default_variant) {
+      return '';
+    }
+
+    let html = '';
+    product.options_with_values.forEach((option) => {
+      html += `<div class="product-variants">`;
+
+      // Render as a dropdown
+      if (option.name.toLowerCase().includes('size')) {
+        html += `<label for="option-${option.name}">Choose your size</label><select id="option-${option.name}" name="${option.name}">`;
+        option.values.forEach((value) => {
+          html += `<option value="${value}">${value}</option>`;
+        });
+        html += `</select>`;
+      } else { // Render as radio buttons for color
+        html += `<label for="option-${option.name}">${option.name}</label>`;
+        html += `<fieldset class="variant-radios">`;
+        option.values.forEach((value, index) => {
+          const checked = index === 0 ? 'checked' : '';
+          html += `<div><label for="option-${option.name}-${value}"><input type="radio" id="option-${option.name}-${value}" name="${option.name}" value="${value}" ${checked}><span>${value}</span></label></div>`;
+        });
+        html += `</fieldset>`;
+      }
+      html += `</div>`;
+    });
+
+    return html;
   }
 
   /**
@@ -275,7 +328,7 @@ class ProductGrid {
     const buttonText = submitButton.querySelector('.button__text');
     if (variant.available) {
       submitButton.disabled = false;
-      if (buttonText) buttonText.textContent = 'Add to Cart';
+      if (buttonText) buttonText.textContent = 'ADD TO CART';
     } else {
       submitButton.disabled = true;
       if (buttonText) buttonText.textContent = 'Sold Out';
@@ -353,11 +406,16 @@ class ProductGrid {
         throw new Error(errorData.description || `HTTP error! status: ${response.status}`);
       }
 
-      // Give user feedback and update theme components
-      console.log('Product(s) added to cart');
-      this.closePopup();
-      // Dispatch a global event that the theme's cart drawer/count can listen for.
+      // --- Success State ---
+      this.setLoading(submitButton, false); // Stop spinner
+      submitButton.classList.add('is-added');
+      const buttonText = submitButton.querySelector('.button__text');
+      if (buttonText) buttonText.textContent = 'Added!';
+
       document.dispatchEvent(new CustomEvent('cart:updated', { bubbles: true }));
+
+      // Close the popup after a short delay to show the success state
+      setTimeout(() => this.closePopup(), 1200);
 
     } catch (error) {
       console.error('Error adding to cart:', error.message);
