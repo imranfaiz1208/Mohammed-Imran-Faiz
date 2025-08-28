@@ -1,0 +1,306 @@
+{% comment %}
+  This section displays a grid of up to 6 products.
+
+  - Products are selectable from the Theme Customizer.
+  - Each product has a trigger to open a popup with more details.
+  - The popup is a single element, populated dynamically with JS.
+  - Product data is pre-loaded into a JSON script tag for performance.
+{% endcomment %}
+
+<div class="product-grid-section page-width">
+  <div class="product-grid">
+    {%- for i in (1..6) -%}
+      {%- liquid
+        assign product_setting_key = 'product_' | append: i
+        assign product = section.settings[product_setting_key]
+      -%}
+      <div class="product-grid-item">
+        {%- if product != blank -%}
+          <div class="product-grid-item__media">
+            <img
+              src="{{ product.featured_image | image_url: width: 500 }}"
+              alt="{{ product.featured_image.alt | escape }}"
+              loading="lazy"
+              width="{{ product.featured_image.width }}"
+              height="{{ product.featured_image.height }}"
+            >
+          </div>
+          <div class="product-grid-item__info">
+            <a href="{{ product.url }}" class="product-grid-item__title">{{ product.title }}</a>
+            <p class="product-grid-item__price">{{ product.price | money }}</p>
+          </div>
+          <button
+            class="popup-trigger"
+            aria-haspopup="dialog"
+            aria-label="View details for {{ product.title | escape }}"
+            data-product-handle="{{ product.handle }}">
+            <span class="visually-hidden">Open product quick view</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" focusable="false" aria-hidden="true" width="14" height="14"><path d="M10 0v20M0 10h20" stroke="currentColor" stroke-width="2"/></svg>
+          </button>
+        {%- else -%}
+          <div class="product-grid-item__placeholder">
+            {{ 'product-app-block-placeholder' | placeholder_svg_tag: 'placeholder-svg' }}
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  </div>
+
+  {%- comment -%}
+    This is the popup structure. It's hidden by default.
+    JS will populate it and make it visible.
+  {%- endcomment -%}
+  <div id="product-popup" class="product-popup" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="product-popup__overlay"></div>
+    <div class="product-popup__content">
+      <button class="product-popup__close" aria-label="Close">&times;</button>
+      <div class="product-popup__body">
+        {%- comment %} Product details will be injected here by JavaScript {%- endcomment %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{%- comment -%}
+  Pre-fetch product data to avoid multiple AJAX requests.
+  This is more efficient and improves user experience.
+{%- endcomment -%}
+<script type="application/json" id="GridProductData">
+  {
+    {%- assign product_handle_string = "" -%}
+    {%- for i in (1..6) -%}
+      {%- assign product_setting_key = 'product_' | append: i -%}
+      {%- assign product_object = section.settings[product_setting_key] -%}
+      {%- if product_object != blank -%}
+        {%- unless product_handle_string contains product_object.handle -%}
+          {%- assign product_handle_string = product_handle_string | append: product_object.handle | append: ',' -%}
+        {%- endunless -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- assign unique_handles = product_handle_string | split: ',' -%}
+    {%- assign first_item_printed = false -%}
+    {%- for handle in unique_handles -%}
+      {%- if handle != "" -%}{%- if first_item_printed %},{% endif %}"{{ handle }}": {{ all_products[handle] | json }}{%- assign first_item_printed = true -%}{%- endif -%}
+    {%- endfor -%}
+  }
+</script>
+
+{%- liquid
+  assign soft_winter_jacket = section.settings.conditional_product
+  if soft_winter_jacket.variants.size > 0
+    assign conditional_variant_id = soft_winter_jacket.first_available_variant.id
+  endif
+-%}
+<script
+  type="application/json"
+  id="GridConditionalProduct"
+  data-variant-id="{{ conditional_variant_id }}">
+</script>
+
+<script src="{{ 'custom-page.js' | asset_url }}" defer="defer"></script>
+
+{%- style -%}
+  .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+  .product-grid-item { position: relative; overflow: hidden; }
+  .product-grid-item__media { aspect-ratio: 1 / 1; overflow: hidden; margin-bottom: 1rem; }
+  .product-grid-item__media img, .product-grid-item__placeholder .placeholder-svg { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+  .product-grid-item:hover .product-grid-item__media img { transform: scale(1.05); }
+  .product-grid-item__info { text-align: center; }
+  .product-grid-item__title { font-size: 1rem; text-decoration: none; color: rgb(var(--color-foreground)); }
+  .product-grid-item__price { font-size: 0.9rem; opacity: 0.7; }
+  .popup-trigger { position: absolute; top: 1rem; right: 1rem; background-color: rgb(var(--color-background)); color: rgb(var(--color-foreground)); border: 1px solid rgba(var(--color-foreground), 0.1); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transform: translateY(10px); transition: opacity 0.3s ease, transform 0.3s ease; }
+  .product-grid-item:hover .popup-trigger { opacity: 1; transform: translateY(0); }
+
+  /* --- Popup Modal Styles --- */
+  .product-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .product-popup.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  .product-popup__overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  .product-popup__content {
+    position: relative;
+    background-color: rgb(var(--color-background));
+    z-index: 1001;
+    /* Desktop Dimensions & Positioning */
+    width: 500px;
+    max-width: 90vw;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+  .product-popup.is-visible .product-popup__content {
+    transform: translateY(0);
+  }
+  .product-popup__close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 20px;
+    line-height: 1;
+  }
+  .product-popup__media {
+    width: 100%;
+    max-height: 250px;
+    margin-bottom: 20px;
+  }
+  .product-popup__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .product-popup__title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 0 10px;
+  }
+  .product-popup__price {
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0 0 15px;
+  }
+  .product-popup__description {
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 20px;
+  }
+  .product-variants {
+    margin-bottom: 20px;
+  }
+  .variant-radios {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    padding: 0;
+    margin: 0 0 15px;
+  }
+  .variant-radios label {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 1px solid #e6e6e6;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    font-size: 14px;
+  }
+  .variant-radios input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .variant-radios label:has(input:checked) {
+    background-color: rgb(var(--color-foreground));
+    color: rgb(var(--color-background));
+    border-color: rgb(var(--color-foreground));
+  }
+  .product-variants label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .product-variants select {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+    margin-bottom: 25px;
+  }
+  .popup-form .button--primary {
+    width: 100%;
+    min-height: 50px;
+    font-size: 18px;
+    border-radius: 6px;
+    margin-top: 10px;
+  }
+
+  .popup-form .button--primary.is-added {
+    background-color: #28a745; /* Success green */
+    border-color: #28a745;
+  }
+
+  .popup-form .button--primary.is-added .loading-overlay__spinner {
+    display: none;
+  }
+
+  @media screen and (max-width: 768px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+    .product-popup__content {
+      width: 90%;
+      padding: 20px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .product-popup__title { font-size: 22px; }
+    .product-popup__price { font-size: 18px; }
+    .product-popup__description { font-size: 14px; }
+  }
+{%- endstyle -%}
+
+{% schema %}
+{
+  "name": "Custom Grid",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Product Selection"
+    },
+    {
+      "type": "paragraph",
+      "content": "Select up to 6 products to display in the grid."
+    },
+    { "type": "product", "id": "product_1", "label": "Product 1" },
+    { "type": "product", "id": "product_2", "label": "Product 2" },
+    { "type": "product", "id": "product_3", "label": "Product 3" },
+    { "type": "product", "id": "product_4", "label": "Product 4" },
+    { "type": "product", "id": "product_5", "label": "Product 5" },
+    { "type": "product", "id": "product_6", "label": "Product 6" },
+    {
+      "type": "header",
+      "content": "Conditional Cart Logic"
+    },
+    {
+      "type": "product",
+      "id": "conditional_product",
+      "label": "Conditional Product",
+      "info": "This product will be added to the cart automatically when a product with 'Black' and 'Medium' variants is added."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Grid"
+    }
+  ]
+}
+{% endschema %}
